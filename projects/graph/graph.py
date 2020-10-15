@@ -10,36 +10,104 @@ class Graph:
         self.vertices = {}
 
     def add_vertex(self, vertex_id):
-        """
-        Add a vertex to the graph.
-        """
-        pass  # TODO
-
+        self.vertices[vertex_id] = set()
+    
     def add_edge(self, v1, v2):
-        """
-        Add a directed edge to the graph.
-        """
-        pass  # TODO
-
+        if v1 in self.vertices and v2 in self.vertices:
+            self.vertices[v1].add(v2)
+        else: 
+            print("Error vertex not found")
     def get_neighbors(self, vertex_id):
-        """
-        Get all neighbors (edges) of a vertex.
-        """
-        pass  # TODO
+        return self.vertices[vertex_id]
+    def bft(self, starting_vertex_id):
+        # Create an empty Queue and add starting vertex to it
+        # This will keep track of all next_to_visit_vertices
+        queue = []
+        queue.append(starting_vertex_id)
+        # Create an empty set to keep track of visited vertices
+        visited = set()
+        # While the queue is not empty
+        while len(queue) > 0:
+            # dequeue a vertex off the queue
+            current_vertex = queue.pop(0)
+            # if vertex not in visited vertices
+            if current_vertex not in visited:
+                # Print it 
+                print(current_vertex)
+                # Add the vertex to our visited set
+                visited.add(current_vertex)
+                # Add all neighbors to the queue
+                for neighbor in self.get_neighbors(current_vertex):
+                    queue.append(neighbor)
+            
+    def dft(self, starting_vertex_id):
+        # Create an empty Stack and add starting vertex to it
+        # This will keep track of all next_to_visit_vertices
+        stack = []
+        stack.append(starting_vertex_id)
+        # Create an empty set to keep track of visited vertices
+        visited = set()
+        # While the queue is not empty
+        while len(stack) > 0:
+            # dequeue a vertex off the stack
+            current_vertex = stack.pop()
 
-    def bft(self, starting_vertex):
-        """
-        Print each vertex in breadth-first order
-        beginning from starting_vertex.
-        """
-        pass  # TODO
+            # if vertex not in visited vertices
+            if current_vertex not in visited:
+                # Print it 
+                print(current_vertex)
+                # Add the vertex to our visited set
+                visited.add(current_vertex)
+                # Add all neighbors to the stack
+                for neighbor in self.get_neighbors(current_vertex):
+                    stack.append(neighbor)
+            
+    # this algorithm does BFT until we find the goal vertex, and returns an array of vertex IDs that are part of the path
+    def bfs(self, starting_vertex_id, target_vertex_id):
+        # Create an empty queue and Add a PATH TO starting vertex 
+        # I.e add array [1] to the queue
+        queue = []
+        queue.append(starting_vertex_id)
+        # create visited set (its empty for now)
+        visited = set()
+        # while queue is not empty:
+        while len(queue) > 0:
 
-    def dft(self, starting_vertex):
-        """
-        Print each vertex in depth-first order
-        beginning from starting_vertex.
-        """
-        pass  # TODO
+            # dequeue the current PATH from the queue
+             current_vertex = queue.pop(0)
+            # get the current vertex to analyze from the path 
+            # use the vertex at the END of the path array
+ 
+            # if vertex not visited:
+             if current_vertex not in visited:
+                # Add the vertex to our visited set
+                visited.add(current_vertex)
+                # Add all neighbors to the queue
+                for neighbor in self.get_neighbors(current_vertex):
+                    queue.append(neighbor)
+                # add vertex to visited list
+
+                # CHECK IF CURRENT VERTEX IS THE TARGET VERTEX
+                if current_vertex == target_vertex_id:
+                    return visited
+                    # we found our vertex, and the path to it
+                    # return the PATH
+                
+                # for each neighbor of current vertex
+                    # Add the path to that neighbor, to the queue
+                        # COPY THE CURRENT PATH
+                        # add neighbor to new path
+                        # add the whole path to the Queue
+
+    def dfs(self, graph, start):
+        visited, stack = set(), [start]
+        while stack:
+            vertex = stack.pop()
+            if vertex not in visited:
+                visited.add(vertex)
+                stack.extend(graph[vertex] - visited)
+        return visited
+
 
     def dft_recursive(self, starting_vertex):
         """
@@ -49,23 +117,6 @@ class Graph:
         This should be done using recursion.
         """
         pass  # TODO
-
-    def bfs(self, starting_vertex, destination_vertex):
-        """
-        Return a list containing the shortest path from
-        starting_vertex to destination_vertex in
-        breath-first order.
-        """
-        pass  # TODO
-
-    def dfs(self, starting_vertex, destination_vertex):
-        """
-        Return a list containing a path from
-        starting_vertex to destination_vertex in
-        depth-first order.
-        """
-        pass  # TODO
-
     def dfs_recursive(self, starting_vertex, destination_vertex):
         """
         Return a list containing a path from
