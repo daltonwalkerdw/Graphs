@@ -1,3 +1,4 @@
+import random
 class User:
     def __init__(self, name):
         self.name = name
@@ -27,15 +28,12 @@ class SocialGraph:
         self.last_id += 1  # automatically increment the ID to assign the new user
         self.users[self.last_id] = User(name)
         self.friendships[self.last_id] = set()
-
     def populate_graph(self, num_users, avg_friendships):
         """
         Takes a number of users and an average number of friendships
         as arguments
-
         Creates that number of users and a randomly distributed friendships
         between those users.
-
         The number of users must be greater than the average number of friendships.
         """
         # Reset graph
@@ -43,10 +41,27 @@ class SocialGraph:
         self.users = {}
         self.friendships = {}
         # !!!! IMPLEMENT ME
-
         # Add users
+        for i in range(0, num_users):
+            self.add_user(f"User {i}")
 
         # Create friendships
+        # Generate all possible friendship combinations
+        possible_friendships =  []    #[ (Friend_id_1, friend_id_2 )  ]
+        for user_id in self.users:
+            for friend_id in range(user_id + 1, self.last_id + 1):
+                possible_friendships.append( (user_id, friend_id) )
+        
+        # randomize the above array
+        random.shuffle(possible_friendships)
+
+        # Pick out num_users * avg_friendships number of friend combos from possible_friendships
+        for i in range(num_users * avg_friendships // 2):
+            friendship = possible_friendships[i]
+            self.add_friendship(friendship[0], friendship[1])
+
+
+
 
     def get_all_social_paths(self, user_id):
         """

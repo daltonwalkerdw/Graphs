@@ -66,38 +66,40 @@ class Graph:
     def bfs(self, starting_vertex_id, target_vertex_id):
         # Create an empty queue and Add a PATH TO starting vertex 
         # I.e add array [1] to the queue
-        queue = []
-        queue.append(starting_vertex_id)
+        queue = [ [starting_vertex_id] ]
+        
         # create visited set (its empty for now)
         visited = set()
         # while queue is not empty:
         while len(queue) > 0:
 
             # dequeue the current PATH from the queue
-             current_vertex = queue.pop(0)
+            current_path = queue.pop(0)
             # get the current vertex to analyze from the path 
             # use the vertex at the END of the path array
- 
+            current_vertex = current_path[-1]
             # if vertex not visited:
-             if current_vertex not in visited:
+            if current_vertex not in visited:
                 # Add the vertex to our visited set
                 visited.add(current_vertex)
                 # Add all neighbors to the queue
-                for neighbor in self.get_neighbors(current_vertex):
-                    queue.append(neighbor)
                 # add vertex to visited list
 
                 # CHECK IF CURRENT VERTEX IS THE TARGET VERTEX
                 if current_vertex == target_vertex_id:
-                    return visited
+                    return current_path
                     # we found our vertex, and the path to it
                     # return the PATH
-                
+                for neighbor in self.get_neighbors(current_vertex):
+                    
                 # for each neighbor of current vertex
                     # Add the path to that neighbor, to the queue
                         # COPY THE CURRENT PATH
+                    current_path_copy = list(current_path)
                         # add neighbor to new path
+                    current_path_copy.append(neighbor)
                         # add the whole path to the Queue
+                    queue.append(current_path_copy)
 
     def dfs(self, graph, start):
         visited, stack = set(), [start]
