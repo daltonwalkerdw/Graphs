@@ -2,19 +2,127 @@ from room import Room
 from player import Player
 from world import World
 
+
 import random
 from ast import literal_eval
 
 # Load world
 world = World()
 
+class Queue():
+    def __init__(self):
+        self.queue = []
+
+    def enqueue(self, value):
+        self.queue.append(value)
+
+    def dequeue(self):
+        if self.size() > 0:
+            return self.queue.pop(0)
+        else:
+            return None
+
+    def size(self):
+        return len(self.queue)
+
+
+def find_unexplored(room):
+    for direction in room:
+        if room[direction] == '?':
+            return direction
+    return None
+
+
+def find_direction(current_room, target_room_id):
+    for direction in current_room:
+        if current_room[direction] == target_room_id:
+            return direction
+    return None
+
+
+def move_map(player):
+    path = []
+    starting_room = player.current_room.id
+    graph = {}
+    unexplored_paths = 0
+
+    graph[starting_room] = {}
+    for e in player.current_room.get_exits():
+        graph[starting_room][e] = '?'
+        unexplored_paths += 1
+
+    reverse_directions = {'n': 's', 's': 'n', 'e': 'w', 'w': 'e'}
+
+    while unexplored_paths > 0:
+        current_room = player.current_room.id
+
+        # check if current room has unexplored paths
+        if '?' in graph[current_room].values():
+            # if so,
+            # find an unexplored direction from current room
+            direction = find_unexplored(graph[current_room])
+            player.travel(direction)
+            next_room = player.current_room.id
+            # add direction to path
+            path.append(direction)
+            graph[current_room][direction] = player.current_room.id
+            if not next_room in graph:
+                graph[next_room] = {}
+                for e in player.current_room.get_exits():
+                    graph[next_room][e] = '?'
+                    unexplored_paths += 1
+            graph[next_room][reverse_directions[direction]] = current_room
+            unexplored_paths -= 2
+
+        else:
+            # if no paths left,
+            # perform a bfs to find nearest room with unexplored path
+
+            q = Queue()
+
+            q.enqueue([current_room])
+
+            visited = set()
+
+            while q.size() > 0:
+
+                p = q.dequeue()
+
+                room = p[-1]
+
+                direction = find_unexplored(graph[room])
+
+                # check if room has any unexplored exits
+                if direction is not None:
+
+                    for i in range(len(p) - 1):
+                        d = find_direction(graph[p[i]], p[i + 1])
+
+                        path.append(d)
+                        # move player
+                        player.travel(d)
+
+                    break
+
+                if room not in visited:
+
+                    # mark as visited
+                    visited.add(room)
+                    # enqueue paths to neighboring rooms
+                    for e in graph[room]:
+                        p_copy = p.copy()
+                        p_copy.append(graph[room][e])
+                        q.enqueue(p_copy)
+
+    return path
+
 
 # You may uncomment the smaller graphs for development and testing purposes.
 # map_file = "maps/test_line.txt"
-map_file = "maps/test_cross.txt"
+# map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
-# map_file = "maps/main_maze.txt"
+map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph = literal_eval(open(map_file, "r").read())
@@ -24,68 +132,11 @@ world.load_graph(room_graph)
 world.print_rooms()
 
 player = Player(world.starting_room)
-# print(player, "current room?")
-# <player.Player object at 0x103959850> current room?
-# print(room_graph, "room_graph")
-# {0: [(3, 5), {'n': 1, 's': 5, 'e': 3, 'w': 7}], 1: [(3, 6), {'s': 0, 'n': 2}], 2: [(3, 7), {'s': 1}], 3: [(4, 5), {'w': 0, 'e': 4}], 4: [(5, 5), {'w': 3}], 5: [(3, 4), {'n': 0, 's': 6}], 6: [(3, 3), {'n': 5}], 7: [(2, 5), {'w': 8, 'e': 0}], 8: [(1, 5), {'e': 7}]} room_graph
-traversal_dict = {}
 
-for rooms in room_graph:
-    world_rooms = (room_graph[rooms][1])
-    traversal_dict[rooms] = list(world_rooms)
-    # {0: ['n', 's', 'e', 'w'], 1: ['s', 'n'], 2: ['s'], 3: ['w', 'e'], 4: ['w'], 5: ['n', 's'], 6: ['n'], 7: ['w', 'e'], 8: ['e']}
-
-    # print(rooms, room_graph[rooms][1])
-    # 0 {'n': 1, 's': 5, 'e': 3, 'w': 7}
-    # world_rooms = (room_graph[rooms][1])
-    # for i in world_rooms:
-    #     print(i, world_rooms[i])
-
-# s 5 - e 3 - w 7 -  s 0 - n 2 - s 1 - w 0 - e 4 - w 3 - n 0 - s 6 - n 5 - w 8 e 0  e 7  These print per line
-# print("room connecte: \n ", room_graph[rooms][1][1])
-
-#     room = rooms
-
-#     if rooms not in traversal_dict:
-#         traversal_dict[room] = rooms
-
-print((traversal_dict), "Hash")
-# # Fill this out with directions to walk
+# Fill this out with directions to walk
 # traversal_path = ['n', 'n']
-traversal_path = [[player.current_room.id]]
-# * grabs exits in current room
-exits = player.current_room.get_exits()
-# print(exits, "exits")
-# ['n', 's', 'w', 'e'] exits
-# print(traversal_path, "trav path")
-# [[0]] trav path
+traversal_path = move_map(player)
 
-
-# DFT for discovering rooms
-
-visited = {}
-
-while len(traversal_path) > 0:
-    curr_room = traversal_path.pop(0)
-    curr_path = curr_room[-1]
-    # print(curr_room, "popped from traversal, curr_room")
-    # print(curr_path, "curr_room[-1]")
-
-    if curr_path not in visited:
-        # print(curr_path, "if curr_path not visited print")
-        visited[curr_path] = traversal_path
-        # print(visited[curr_path], "visited[curr_path]")
-        for exit in exits:
-            new_path = traversal_path.copy()
-            # print(new_path, "new_path = traversal_path.copy()")
-            new_path.append(exit)
-            # print(new_path, "new_path.append(exit)")
-            traversal_path.append(new_path)
-            # print(traversal_path, "traversal_path.append(new_path)")
-    # print(visited, "visted end of if")
-    # print(traversal_path, "transversal paths end of if")
-# print(visited, "visted end of while")
-# print(traversal_path, "transversal paths end of while")
 
 # TRAVERSAL TEST
 visited_rooms = set()
@@ -97,57 +148,22 @@ for move in traversal_path:
     visited_rooms.add(player.current_room)
 
 if len(visited_rooms) == len(room_graph):
-    print("test passed")
-    # f"TESTS PASSED: {len(traversal_path)} moves, {len(visited_rooms)} rooms visited")
+    print(
+        f"TESTS PASSED: {len(traversal_path)} moves, {len(visited_rooms)} rooms visited")
 else:
     print("TESTS FAILED: INCOMPLETE TRAVERSAL")
-    # print(f"{len(room_graph) - len(visited_rooms)} unvisited rooms")
+    print(f"{len(room_graph) - len(visited_rooms)} unvisited rooms")
 
 
 #######
 # UNCOMMENT TO WALK AROUND
 #######
-# player.current_room.print_room_description(player)
-
-# while True:
-#     cmds = input("-> ").lower().split(" ")
-#     if cmds[0] in ["n", "s", "e", "w"]:
-#         player.travel(cmds[0], True)
-#     elif cmds[0] == "q":
-#         break
-#     else:
-#         print("I did not understand that command.")
-
-
-
-# Room 0
-
-#    (3,5)
-
-# Exits: [n]
-#  ID: 0
-#   current room?
-# ['n'] exits
-# [0] current room
-# [0]
-# {0: [['n']]} visted
-# [['n']] transversal paths
-# ['n'] current room
-# ['n']
-# {0: [['n']], 'n': [['n']]} visted
-# [['n']] transversal paths
-# ['n'] current room
-# {0: [], 'n': []} visted
-# [] transversal paths
-# TESTS FAILED: INCOMPLETE TRAVERSAL
-# 2 unvisited rooms
-# {<room.Room object at 0x10487c0d0>} visted room
-
-# -------------------
-
-# Room 0
-
-#    (3,5)
-
-# Exits: [n]
-#  ID: 0
+player.current_room.print_room_description(player)
+while True:
+    cmds = input("-> ").lower().split(" ")
+    if cmds[0] in ["n", "s", "e", "w"]:
+        player.travel(cmds[0], True)
+    elif cmds[0] == "q":
+        break
+    else:
+        print("I did not understand that command.")
